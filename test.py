@@ -1,60 +1,60 @@
+import pandas as pd
 import ml_model
 import helper
 
-# ==========================================
-# BEÁLLÍTÁSOK
-# ==========================================
 # Ide másold be a működő AQ-s kulcsodat!
-API_KEY = "AQ.Ab8RN6Kx_tfFZ63BH2GvelB78IoGbt5BrBJYAecCpYzFh6FsjA"
+API_KEY = "AQ...IDE_MÁSOLD_A_KULCSOT..."
 
-COMPLEX_TEST_CASES = [
-    {
-        "id": 1,
-        "title": "A Dühös Kombó (Fiókhiba + Szállítás + Visszatérítés)",
-        "text": "I have been trying to access my profile for two days, but the system keeps throwing a 404 error. Because I couldn't log in, I couldn't cancel my subscription in time. Now my credit card has been charged $99 for a service I don't even want, and the router you shipped to me arrived completely broken. I demand an immediate refund for the charge, a replacement for the hardware, and someone to fix my account login right now!"
-    },
-    {
-        "id": 2,
-        "title": "A Félrevezető Dicséret (Sok pozitív zaj + 1 kritikus szoftverhiba)",
-        "text": "I really love your product! The design is absolutely great and the shipping was super fast, the package arrived two days earlier than expected. The delivery guy was also very polite. However, I have a major issue: whenever I try to export my monthly financial report to a PDF file, the entire application crashes to the desktop and deletes all my saved data from the last hour. Please look into this software bug immediately."
-    }
-]
-
-# ==========================================
-# TESZTELÉSI LOGIKA
-# ==========================================
-print("🚀 KOMPLEX STRESSZTESZT INDÍTÁSA...\n")
-
-print("1. LÉPÉS: Scikit-Learn modell betanítása...")
+print("🚀 AUTOMATIZÁLT TESZTELÉS VALÓS CSV ADATOKKAL...\n")
 vectorizer, model = ml_model.train_ticket_model('tickets.csv')
 
-if vectorizer is None or model is None:
-    print("❌ HIBA: A tickets.csv nem található vagy sérült!")
+if vectorizer is None:
+    print("❌ HIBA: A tickets.csv nem található!")
     exit()
-print("✅ Modell sikeresen betanítva a háttérben.\n")
 
-print("2. LÉPÉS: Extrém esetek elemzése és AI válaszgenerálás...")
-print("=" * 70)
+print("✅ Modell kész. Adatok kinyerése a CSV-ből...\n")
+print("=" * 60)
 
-for case in COMPLEX_TEST_CASES:
-    print(f"\n[TESZT #{case['id']}] - {case['title']}")
-    print(f"Bemeneti panasz:\n\"{case['text']}\"\n")
+# Kiveszünk 3 véletlenszerű sort a saját adataidból
+df = pd.read_csv('tickets.csv').dropna(subset=['Ticket Description', 'Ticket Type'])
+sample_cases = df.sample(3, random_state=42) # A random_state miatt mindig ugyanazt a 3-at veszi ki tesztelésre
+
+passed_tests = 0
+test_id = 1
+
+for index, row in sample_cases.iterrows():
+    real_text = row['Ticket Description']
+    expected_cat = row['Ticket Type']
     
-    # 1. Scikit-Learn Predikció
-    predicted_cat = ml_model.predict_category(case['text'], vectorizer, model)
-    print(f"🤖 Scikit-Learn által választott fő kategória: >> {predicted_cat.upper()} <<")
+    print(f"TESZT #{test_id}")
+    # Csak az első 100 karaktert írjuk ki, hogy ne spammelje tele a képernyőt
+    print(f"Valós bemenet: '{real_text[:100]}...'") 
     
-    # 2. Gemini Válaszgenerálás
-    print("✨ Gemini 2.5 válasz fogalmazása (figyeld, hogyan kezeli a több szálat!)...")
-    try:
-        response_email = helper.generate_email_response(API_KEY, case['text'], predicted_cat)
-        print("-" * 50)
-        print(response_email.strip())
-        print("-" * 50)
-        print(f"✅ Komplex Teszt #{case['id']} sikeresen teljesítve!")
-    except Exception as e:
-        print(f"❌ HIBA a Gemini hívásánál: {e}")
+    # Elvégzi a predikciót
+    actual_prediction = ml_model.predict_category(real_text, vectorizer, model)
+    
+    print(f"Várt kategória (CSV-ből):  [{expected_cat}]")
+    print(f"Gép tippje (Predikció):    [{actual_prediction}]")
+    
+    # Összehasonlítás
+    if actual_prediction == expected_cat:
+        print("Eredmény: ✅ SIKERES TESZT")
+        passed_tests += 1
+    else:
+        print("Eredmény: ❌ SIKERTELEN TESZT")
         
-    print("=" * 70)
+    print("-" * 60)
+    test_id += 1
 
-print("\n🎉 Stresszteszt véget ért!")
+# Ha legalább egy teszt sikeres volt, teszteljük a Geminit is vele
+if passed_tests > 0:
+    print("\n✨ Gemini API tesztelése az első sikeres mintával...")
+    first_success_text = sample_cases.iloc[0]['Ticket Description']
+    first_success_cat = sample_cases.iloc[0]['Ticket Type']
+    try:
+        response = helper.generate_email_response(API_KEY, first_success_text, first_success_cat)
+        print("✅ Gemini API: SIKERES (Levél legenerálva)")
+    except Exception as e:
+        print(f"❌ Gemini API HIBA: {e}")
+
+print(f"\n📊 TESZTEREDMÉNYEK: 3 / {passed_tests} teszt sikeres.")

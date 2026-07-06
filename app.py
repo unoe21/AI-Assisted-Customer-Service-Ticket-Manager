@@ -1,6 +1,6 @@
 import streamlit as st
 import ml_model
-import gemini_helper
+import helper
 
 # 1. OLDAL BEÁLLÍTÁSAI
 st.set_page_config(page_title="AI Ticket Asszisztens", layout="wide", page_icon="🤖")
@@ -41,7 +41,7 @@ if st.button("Jegy Elemzése és Válasz Generálása", type="primary"):
         else:
             with st.spinner("AI Választervezet fogalmazása..."):
                 try:
-                    response_text = gemini_helper.generate_email_response(api_key, new_complaint, category)
+                    response_text = helper.generate_email_response(api_key, new_complaint, category)
                     st.markdown("### 📝 Javasolt Válaszlevél")
                     st.info(response_text)
                 except Exception as e:
