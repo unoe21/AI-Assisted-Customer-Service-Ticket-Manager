@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import ml_model
-import helper
+import response
 
 # 1. OLDAL BEÁLLÍTÁSAI
 st.set_page_config(page_title="AI Ticket Asszisztens", layout="wide", page_icon="🤖")
@@ -59,7 +59,7 @@ with tab1:
             else:
                 with st.spinner("AI Választervezet fogalmazása..."):
                     try:
-                        response_text = helper.generate_email_response(api_key, new_complaint, category, tone_english)
+                        response_text = response.generate_email_response(api_key, new_complaint, category, tone_english)
                         st.markdown(f"### 📝 Javasolt Válaszlevél ({tone_english})")
                         st.info(response_text)
                     except Exception as e:
