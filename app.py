@@ -32,12 +32,13 @@ st.sidebar.header("⚙️ Settings")
 env_api_key = os.getenv("GEMINI_API_KEY")
 
 if env_api_key:
-    # If the key is in the .env file, we use it automatically
+    # 1. ESET: Sikerült kiolvasni a .env fájlból
     api_key = env_api_key
     st.sidebar.success("✅ API Key securely loaded from .env")
 else:
-    # Fallback: if .env is missing, show the input box
-    api_key = st.sidebar.text_input("Gemini API Key:", type="password")
+    # 2. ESET: Nincs .env fájl, ezért kérjük be a felületen
+    st.sidebar.warning("⚠️ No .env file found. Manual input required.")
+    api_key = st.sidebar.text_input("Please enter your Gemini API Key:", type="password")
 
 st.sidebar.markdown("---")
 selected_tone = st.sidebar.selectbox(
