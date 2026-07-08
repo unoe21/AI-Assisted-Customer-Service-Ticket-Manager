@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # 1. PAGE CONFIGURATION
 st.set_page_config(page_title="AI Ticket Assistant", layout="wide", page_icon="🤖")
-st.title("🤖 AI-Assisted Customer Service System")
+st.title("🤖  AI-Assisted Customer Service System")
 st.divider()
 
 # Load environment variables automatically from the .env file
@@ -26,7 +26,7 @@ if vectorizer is None:
     st.stop()
 
 # 3. SIDEBAR (Settings and Tone)
-st.sidebar.header("⚙️ Settings")
+st.sidebar.header("Settings")
 
 # Check if the API key is securely loaded from the .env file
 env_api_key = os.getenv("GEMINI_API_KEY")
@@ -34,15 +34,15 @@ env_api_key = os.getenv("GEMINI_API_KEY")
 if env_api_key:
     # 1. ESET: Sikerült kiolvasni a .env fájlból
     api_key = env_api_key
-    st.sidebar.success("✅ API Key securely loaded from .env")
+    st.sidebar.success("API Key securely loaded from .env")
 else:
     # 2. ESET: Nincs .env fájl, ezért kérjük be a felületen
-    st.sidebar.warning("⚠️ No .env file found. Manual input required.")
+    st.sidebar.warning("No .env file found. Manual input required.")
     api_key = st.sidebar.text_input("Please enter your Gemini API Key:", type="password")
 
 st.sidebar.markdown("---")
 selected_tone = st.sidebar.selectbox(
-    "📝 Response Tone:",
+    "Response Tone:",
     [
         "Professional and Polite", 
         "Friendly and Empathetic", 
@@ -52,7 +52,7 @@ selected_tone = st.sidebar.selectbox(
 )
 
 # 4. MAIN LOGIC (Tabs)
-tab1, tab2 = st.tabs(["📩 Process New Ticket", "📊 Dashboard & Analytics"])
+tab1, tab2 = st.tabs(["Process New Ticket", "Dashboard & Analytics"])
 
 # --- TAB 1: WORKSPACE ---
 with tab1:
@@ -74,7 +74,7 @@ with tab1:
                 with st.spinner("Drafting AI Response..."):
                     try:
                         response_text = response.generate_email_response(api_key, new_complaint, category, selected_tone)
-                        st.markdown(f"### 📝 Suggested Email Response ({selected_tone})")
+                        st.markdown(f"### Suggested Email Response ({selected_tone})")
                         st.info(response_text)
                     except Exception as e:
                         st.error(f"Error communicating with Gemini: {e}")

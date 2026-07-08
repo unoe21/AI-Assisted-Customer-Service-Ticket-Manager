@@ -9,7 +9,7 @@ def generate_email_response(api_key, complaint, category, tone="Professional"):
     
     llm_model = genai.GenerativeModel('gemini-2.5-flash')
     
-    # Prompt engineering with tone enforcement
+    # Prompt with tone enforcement
     prompt = f"""
     You are a professional and empathetic customer support agent. 
     A customer sent the following message: "{complaint}"
