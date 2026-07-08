@@ -2,79 +2,92 @@ import streamlit as st
 import pandas as pd
 import ml_model
 import response
+import os
+from dotenv import load_dotenv
 
-# 1. OLDAL BEÁLLÍTÁSAI
-st.set_page_config(page_title="AI Ticket Asszisztens", layout="wide", page_icon="🤖")
-st.title("🤖 AI-Asszisztált Ügyfélszolgálati Rendszer")
+# 1. PAGE CONFIGURATION
+st.set_page_config(page_title="AI Ticket Assistant", layout="wide", page_icon="🤖")
+st.title("🤖 AI-Assisted Customer Service System")
 st.divider()
 
-# 2. MODELL BETÖLTÉSE (Most már a gyors joblib fájlokból)
+# Load environment variables automatically from the .env file
+load_dotenv()
+
+# 2. LOAD MODELS
 @st.cache_resource
 def load_ai_models():
     return ml_model.load_or_train_model('tickets.csv')
 
-with st.spinner("Intelligens mag betöltése..."):
+with st.spinner("Loading intelligent core..."):
     vectorizer, model = load_ai_models()
 
 if vectorizer is None:
-    st.error("Hiba: A 'tickets.csv' fájl nem található!")
+    st.error("Error: The 'tickets.csv' file was not found!")
     st.stop()
 
-# 3. OLDALSÁV (Beállítások és Hangnem)
-st.sidebar.header("⚙️ Beállítások")
-api_key = st.sidebar.text_input("Gemini API kulcs:", type="password")
+# 3. SIDEBAR (Settings and Tone)
+st.sidebar.header("⚙️ Settings")
+
+# Check if the API key is securely loaded from the .env file
+env_api_key = os.getenv("GEMINI_API_KEY")
+
+if env_api_key:
+    # If the key is in the .env file, we use it automatically
+    api_key = env_api_key
+    st.sidebar.success("✅ API Key securely loaded from .env")
+else:
+    # Fallback: if .env is missing, show the input box
+    api_key = st.sidebar.text_input("Gemini API Key:", type="password")
 
 st.sidebar.markdown("---")
 selected_tone = st.sidebar.selectbox(
-    "📝 Válaszadás stílusa (Hangnem):",
+    "📝 Response Tone:",
     [
-        "Professional and Polite (Hivatalos)", 
-        "Friendly and Empathetic (Barátságos)", 
-        "Extremely Apologetic (Sűrű elnézést kérő)", 
-        "Short and Direct (Lényegretörő)"
+        "Professional and Polite", 
+        "Friendly and Empathetic", 
+        "Extremely Apologetic", 
+        "Short and Direct"
     ]
 )
-# Kicsípjük a zárójeles magyar magyarázatot, csak az angol utasítást küldjük a Gemininek
-tone_english = selected_tone.split(" (")[0]
 
-# 4. FŐ LOGIKA (Fülek létrehozása)
-tab1, tab2 = st.tabs(["📩 Új Jegy Kezelése", "📊 Vezetői Statisztikák"])
+# 4. MAIN LOGIC (Tabs)
+tab1, tab2 = st.tabs(["📩 Process New Ticket", "📊 Dashboard & Analytics"])
 
-# --- ELSŐ FÜL: A munkaállomás ---
+# --- TAB 1: WORKSPACE ---
 with tab1:
-    st.subheader("Ügyfél panasz feldolgozása")
-    new_complaint = st.text_area("Másold ide az ügyfél e-mailjének tartalmát:", height=150)
+    st.subheader("Process Customer Complaint")
+    new_complaint = st.text_area("Paste the customer's email content here:", height=150)
 
-    if st.button("Jegy Elemzése és Válasz Generálása", type="primary"):
+    if st.button("Analyze Ticket & Generate Response", type="primary"):
         if not new_complaint:
-            st.warning("Kérlek, írj be egy panaszt!")
+            st.warning("Please enter a complaint!")
         else:
-            # ML Predikció
+            # ML Prediction
             category = ml_model.predict_category(new_complaint, vectorizer, model)
-            st.success(f"**Predikált Kategória:** {category.upper()}")
+            st.success(f"**Predicted Category:** {category.upper()}")
             
-            # Gemini Hívás
+            # Gemini Generation
             if not api_key:
-                st.info("A válaszgeneráláshoz add meg az API kulcsot az oldalsávban!")
+                st.info("Please enter your API key in the sidebar to generate a response!")
             else:
-                with st.spinner("AI Választervezet fogalmazása..."):
+                with st.spinner("Drafting AI Response..."):
                     try:
-                        response_text = response.generate_email_response(api_key, new_complaint, category, tone_english)
-                        st.markdown(f"### 📝 Javasolt Válaszlevél ({tone_english})")
+                        response_text = response.generate_email_response(api_key, new_complaint, category, selected_tone)
+                        st.markdown(f"### 📝 Suggested Email Response ({selected_tone})")
                         st.info(response_text)
                     except Exception as e:
-                        st.error(f"Hiba a Gemini hívásakor: {e}")
+                        st.error(f"Error communicating with Gemini: {e}")
 
-# --- MÁSODIK FÜL: Analitika ---
+# --- TAB 2: ANALYTICS ---
 with tab2:
-    st.subheader("Historikus panaszok eloszlása")
+    st.subheader("Historical Complaint Distribution")
     try:
-        # Beolvassuk a CSV-t a grafikonhoz
+        # Load CSV for the chart
         df = pd.read_csv('tickets.csv').dropna(subset=['Ticket Type'])
         category_counts = df['Ticket Type'].value_counts()
         
-        # Oszlopdiagram rajzolása
+        # Draw Bar Chart
         st.bar_chart(category_counts)
-        st.caption("A betanító adatbázisunkban található panaszok megoszlása kategóriánként.")
+        st.caption("Distribution of complaints by category in our training database.")
     except:
-        st.warning("Nem sikerült betölteni a statisztikai adatokat.")
+        st.warning("Could not load statistical data.")
