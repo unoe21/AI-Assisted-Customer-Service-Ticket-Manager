@@ -39,7 +39,7 @@ An AI-powered first-line customer support assistant that automates ticket handli
    pip install -r requirements.txt
 
 2. **Configure API Key:**
-    *Create a .env file in the root directory.
+    Create a .env file in the root directory.
    ```bash
    GEMINI_API_KEY=your_actual_gemini_api_key
 
