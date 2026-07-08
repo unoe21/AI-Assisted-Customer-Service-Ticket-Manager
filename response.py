@@ -1,16 +1,15 @@
 import google.generativeai as genai
 
 def generate_email_response(api_key, complaint, category, tone="Professional"):
-    """Létrehozza a válaszlevelet a Gemini 2.5 modell segítségével a megadott hangnemben."""
+    """Generates an email response using the Gemini 2.5 model with a specific tone."""
     
-    # Biztonsági tisztítás (levágjuk a láthatatlan szóközöket)
+    # Security strip to remove invisible whitespace characters
     clean_key = api_key.strip()
     genai.configure(api_key=clean_key)
     
-    # A legújabb tesztelt modellünk
     llm_model = genai.GenerativeModel('gemini-2.5-flash')
     
-    # A prompt kiegészült a tone (hangnem) utasítással
+    # Prompt engineering with tone enforcement
     prompt = f"""
     You are a professional and empathetic customer support agent. 
     A customer sent the following message: "{complaint}"
