@@ -37,3 +37,12 @@ An AI-powered first-line customer support assistant that automates ticket handli
 1. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
+
+2. **Configure API Key:
+    Create a .env file in the root directory:**
+   ```plaintext
+   GEMINI_API_KEY=your_actual_gemini_api_key
+
+3. **Launch the App:**
+   ```bash
+    python -m streamlit run app.py
