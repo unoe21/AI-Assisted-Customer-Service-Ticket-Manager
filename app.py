@@ -10,7 +10,7 @@ st.divider()
 # 2. MODELL BETÖLTÉSE A KÜLÖN FÁJLBÓL
 @st.cache_resource
 def load_ai_models():
-    return ml_model.train_ticket_model('tickets.csv')
+    return ml_model.load_or_train_model('tickets.csv')
 
 with st.spinner("Modell betanítása a historikus adatokon..."):
     vectorizer, model = load_ai_models()

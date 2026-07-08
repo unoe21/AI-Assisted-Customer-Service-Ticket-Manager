@@ -1,15 +1,27 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
+import joblib
+import os
 
-def train_ticket_model(csv_path='tickets.csv'):
-    """Betölti az adatokat és betanítja az ML modellt finomhangolt paraméterekkel."""
+# Fájlnevek, ahová a betanított modellt mentjük
+VECTORIZER_FILE = 'ticket_vectorizer.joblib'
+MODEL_FILE = 'ticket_model.joblib'
+
+def load_or_train_model(csv_path='tickets.csv'):
+    """Betölti a lementett modellt, vagy ha nincs, betanítja és lementi."""
+    
+    # 1. HA MÁR BE VAN TANÍTVA: Csak betöltjük (Villámgyors)
+    if os.path.exists(VECTORIZER_FILE) and os.path.exists(MODEL_FILE):
+        vectorizer = joblib.load(VECTORIZER_FILE)
+        model = joblib.load(MODEL_FILE)
+        return vectorizer, model
+        
+    # 2. HA MÉG NINCS BETANÍTVA: Beolvasás és tanulás
     try:
         df = pd.read_csv(csv_path)
         df = df.dropna(subset=['Ticket Description', 'Ticket Type'])
         
-        # 1. Finomhangolt TF-IDF (Zajszűrés)
-        # Alapértelmezett, biztonságos TF-IDF (Nincs agresszív kidobálás)
         vectorizer = TfidfVectorizer(
             max_features=5000, 
             stop_words='english', 
@@ -19,10 +31,14 @@ def train_ticket_model(csv_path='tickets.csv'):
         X = vectorizer.fit_transform(df['Ticket Description'])
         y = df['Ticket Type']
         
-        # Alapértelmezett modell, súlyozás nélkül
-        model = LinearSVC(dual="auto")
+        # Okosabb, kiegyensúlyozott modell
+        model = LinearSVC(dual="auto", class_weight='balanced')
         
         model.fit(X, y)
+        
+        # A betanított "agy" lementése a mappába
+        joblib.dump(vectorizer, VECTORIZER_FILE)
+        joblib.dump(model, MODEL_FILE)
         
         return vectorizer, model
     except FileNotFoundError:
