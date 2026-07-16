@@ -22,12 +22,12 @@ def load_or_train_model(csv_path='tickets.csv'):
     """Loads the saved model or trains a new one using a full Data Science pipeline."""
     
     if os.path.exists(VECTORIZER_FILE) and os.path.exists(MODEL_FILE):
-        print("✅ Pre-trained ML models loaded successfully.")
+        print("Pre-trained ML models loaded successfully.")
         vectorizer = joblib.load(VECTORIZER_FILE)
         model = joblib.load(MODEL_FILE)
         return vectorizer, model
         
-    print("⚙️ No saved models found. Starting training pipeline...")
+    print("No saved models found. Starting training pipeline...")
     try:
         df = pd.read_csv(csv_path)
         df = df.dropna(subset=['Ticket Description', 'Ticket Type'])
